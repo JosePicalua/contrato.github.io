@@ -17,57 +17,203 @@ const suscriptorSelect = document.getElementById('suscriptorSelect');
 const numeroContratoInput = document.getElementById('numeroContratoInput');
 const objetoContratoSelect = document.getElementById('objetoContratoSelect');
 
-// ==================== DATOS DE SUPERVISORES Y OBJETOS (ANTES DE LAS FUNCIONES) ====================
-// ==================== DATOS DE SUPERVISORES, OBJETOS Y CLÁUSULAS ====================
-const supervisoresData = {
-    "1": {
-        nombre: "GERALDINES GONZALEZ CERVANTES",
-        documento: "1.085.096.299"
-    },
-    "2": {
-        nombre: "Supervisor 2",
-        documento: "000.000.000"
-    },
-    "3": {
-        nombre: "Supervisor 3",
-        documento: "000.000.000"
+
+const inputTotal = document.getElementById('totalContrato');
+const inputMeses = document.getElementById('totalMeses');
+const inputMensual = document.getElementById('valorMensual');
+
+
+// Función para convertir fecha (con el ajuste de zona horaria incluido)
+function fechaALetraYNumero(fechaStr) {
+    const meses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+    
+    // El formato 'yyyy-mm-dd' a veces da problemas de zona horaria, 
+    // lo separamos manualmente para asegurar precisión:
+    const [anio, mes, dia] = fechaStr.split('-').map(Number);
+    const fecha = new Date(anio, mes - 1, dia);
+
+    const diaNum = fecha.getDate();
+    const mesLetra = meses[fecha.getMonth()];
+    const añoNum = fecha.getFullYear();
+
+    return `${diaNum} DE ${mesLetra} DE ${añoNum}`;
+}
+
+// Evento para el Supervisor (Ronald)
+document.getElementById('suscriptorSelect').addEventListener('change', function() {
+    const decretoContainer = document.getElementById('decretoEncargo').closest('.form-group');
+    const fechadecretoContainer = document.getElementById('fechaDecretoDesignado').closest('.form-group');
+    
+    if (this.value === "1") { // Ronald Dario Florez Sierra
+        decretoContainer.style.display = 'none';
+        fechadecretoContainer.style.display = 'none';
+    } else {
+        decretoContainer.style.display = 'block';
+        fechadecretoContainer.style.display = 'block';
     }
-};
+});
 
-const objetosContrato = {
-    "1": "PRESTACION DE SERVICIOS DE APOYO COMO AUXILIAR ADMINISTRATIVO – MENSAJERIA",
-    "2": "OTRO OBJETO DE CONTRATO"
-};
+// Evento para la conversión de fecha
+// Asumiendo que 'fechaSelector' es tu input type="date"
+const selector = document.getElementById('fechaSelector'); 
+const inputDestino = document.getElementById('fechaDecretoDesignado');
 
-const clausulas = {
-    "1": {
-        "clausula_1": "CLÁUSULA PRIMERA - OBJETO: El presente contrato tiene por objeto la prestación de servicios de apoyo como auxiliar administrativo en el área de mensajería.",
-        "clausula_2": "CLÁUSULA SEGUNDA - PLAZO: El plazo de ejecución del presente contrato será de TRES (3) meses contados a partir de la suscripción del acta de inicio.",
-        "clausula_3": "CLÁUSULA TERCERA - VALOR: El valor del presente contrato es la suma de TRES MILLONES DE PESOS ($3.000.000) M/CTE.",
-        "clausula_4": "CLÁUSULA CUARTA - FORMA DE PAGO: EL MUNICIPIO pagará al CONTRATISTA el valor del contrato en tres (3) cuotas mensuales iguales."
-    },
-    "2": {
-        "clausula_1": "CLÁUSULA PRIMERA - OBJETO: Diferentes cláusulas para el objeto 2.",
-        "clausula_2": "CLÁUSULA SEGUNDA - PLAZO: Otro plazo diferente.",
-        "clausula_3": "CLÁUSULA TERCERA - VALOR: Otro valor.",
-        "clausula_4": "CLÁUSULA CUARTA - FORMA DE PAGO: Otra forma de pago."
-    }
-};
-
-// ==================== FUNCIÓN AUXILIAR PARA CARGAR IMAGEN ====================
-async function obtenerImagenMarcaAgua(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.warn('⚠️ No se pudo cargar la imagen:', url);
-            return null;
+if (selector) {
+    selector.addEventListener('change', function() {
+        if (this.value) {
+            // Pasamos el valor directamente a la función
+            const fechaConvertida = fechaALetraYNumero(this.value);
+            inputDestino.value = fechaConvertida;
+        } else {
+            inputDestino.value = "";
         }
-        const blob = await response.blob();
-        return blob;
-    } catch (error) {
-        console.error('❌ Error al cargar imagen:', error);
-        return null;
+    });
+}
+
+/// Evento para fechaInicioPresupuestal (ya existe, pero lo dejo claro)
+const fechaInicioPresupuestal = document.getElementById('fechaInicioPresupuestal');
+const fechaInicioLaboral = document.getElementById('fechaInicioLaboral');
+
+if (fechaInicioPresupuestal) {
+    fechaInicioPresupuestal.addEventListener('change', function() {
+        if (this.value) {
+            const fechaConvertida = fechaALetraYNumero(this.value);
+            fechaInicioLaboral.value = fechaConvertida;
+        } else {
+            fechaInicioLaboral.value = "";
+        }
+    });
+}
+
+// 🔹 NUEVO: Evento para fechaInicioLaboralSelector
+const fechaInicioLaboralSelector = document.getElementById('fechaInicioLaboralSelector');
+if (fechaInicioLaboralSelector) {
+    fechaInicioLaboralSelector.addEventListener('change', function() {
+        if (this.value) {
+            const fechaConvertida = fechaALetraYNumero(this.value);
+            fechaInicioLaboral.value = fechaConvertida;
+        } else {
+            fechaInicioLaboral.value = "";
+        }
+    });
+}
+
+// 🔹 NUEVO: Evento para fechaFinalLaboralSelector
+const fechaFinalLaboralSelector = document.getElementById('fechaFinalLaboralSelector');
+const fechaFinalLaboral = document.getElementById('fechaFinalLaboral');
+
+if (fechaFinalLaboralSelector) {
+    fechaFinalLaboralSelector.addEventListener('change', function() {
+        if (this.value) {
+            const fechaConvertida = fechaALetraYNumero(this.value);
+            fechaFinalLaboral.value = fechaConvertida;
+        } else {
+            fechaFinalLaboral.value = "";
+        }
+    });
+}
+
+
+// Función para formatear números con puntos de miles
+function formatearNumero(numero) {
+    return numero.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Función para limpiar formato y obtener número
+function limpiarNumero(texto) {
+    return texto.replace(/\./g, '');
+}
+
+// Evento para formatear el Total del Contrato mientras se escribe
+inputTotal.addEventListener('input', function(e) {
+    let valor = this.value.replace(/\./g, ''); // Remover puntos existentes
+    
+    // Solo permitir números
+    valor = valor.replace(/\D/g, '');
+    
+    // Formatear con puntos de miles
+    if (valor) {
+        this.value = formatearNumero(valor);
     }
+    
+    // Calcular valor mensual automáticamente
+    calcularMensualidad();
+});
+
+// Evento para calcular cuando cambian los meses
+inputMeses.addEventListener('input', function() {
+    // Solo permitir números
+    this.value = this.value.replace(/\D/g, '');
+    
+    // Calcular valor mensual automáticamente
+    calcularMensualidad();
+});
+
+// Función para calcular mensualidad
+function calcularMensualidad() {
+    const totalTexto = inputTotal.value;
+    const mesesTexto = inputMeses.value;
+    
+    // Limpiar y convertir a números
+    const total = parseFloat(limpiarNumero(totalTexto)) || 0;
+    const meses = parseInt(mesesTexto) || 0;
+
+    if (total > 0 && meses > 0) {
+        const mensual = Math.round(total / meses);
+        // Formatear el resultado con puntos de miles
+        inputMensual.value = formatearNumero(mensual);
+    } else {
+        inputMensual.value = "";
+    }
+}
+
+
+// ==================== FUNCIÓN PARA CONVERTIR NÚMERO A LETRAS ====================
+function convertirNumeroALetras(num) {
+    const unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
+    const especiales = ["DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISÉIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"];
+    const decenas = ["", "", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+    const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
+    
+    if (num === 0) return "CERO";
+    if (num === 100) return "CIEN";
+    
+    function convertirGrupo(n) {
+        if (n === 0) return "";
+        if (n < 10) return unidades[n];
+        if (n >= 10 && n < 20) return especiales[n - 10];
+        if (n >= 20 && n < 30) {
+            return n === 20 ? "VEINTE" : "VEINTI" + unidades[n % 10];
+        }
+        if (n < 100) {
+            return decenas[Math.floor(n / 10)] + (n % 10 > 0 ? " Y " + unidades[n % 10] : "");
+        }
+        if (n === 100) return "CIEN";
+        if (n < 1000) {
+            return centenas[Math.floor(n / 100)] + (n % 100 > 0 ? " " + convertirGrupo(n % 100) : "");
+        }
+        return "";
+    }
+    
+    if (num < 1000) {
+        return convertirGrupo(num);
+    }
+    
+    if (num < 1000000) {
+        const miles = Math.floor(num / 1000);
+        const resto = num % 1000;
+        let textoMiles = miles === 1 ? "MIL" : convertirGrupo(miles) + " MIL";
+        return textoMiles + (resto > 0 ? " " + convertirGrupo(resto) : "");
+    }
+    
+    if (num < 1000000000) {
+        const millones = Math.floor(num / 1000000);
+        const resto = num % 1000000;
+        let textoMillones = millones === 1 ? "UN MILLÓN" : convertirGrupo(millones) + " MILLONES";
+        return textoMillones + (resto > 0 ? " " + convertirNumeroALetras(resto) : "");
+    }
+    
+    return "Número demasiado grande";
 }
 
 // ==================== CARGAR CSV AL INICIAR ====================
@@ -108,10 +254,6 @@ async function cargarCSV() {
     }
 }
 
-
-
-
-
 /* global docx, saveAs */
 
 // Verificar que docx esté disponible
@@ -121,7 +263,6 @@ const esperarDocx = setInterval(() => {
         clearInterval(esperarDocx);
     }
 }, 500);
-
 
 // ==================== MOSTRAR EMPLEADOS EN LA TABLA ====================
 function mostrarEmpleados(empleados) {
@@ -136,7 +277,7 @@ function mostrarEmpleados(empleados) {
     empleados.forEach(empleado => {
         const fila = document.createElement('tr');
         
-        // 1. Lógica de colores basada en el estado
+        // Lógica de colores basada en el estado
         let claseFila = '';
         let textoEstado = empleado.estado ? empleado.estado.trim() : "";
 
@@ -149,7 +290,7 @@ function mostrarEmpleados(empleados) {
             claseFila = 'fila-roja';     // No Hacer
         }
 
-        // 2. Aplicar la clase a TODA la fila
+        // Aplicar la clase a toda la fila
         fila.className = claseFila;
 
         fila.innerHTML = `
@@ -158,7 +299,7 @@ function mostrarEmpleados(empleados) {
             <td style="font-weight: bold; text-align: center;">${textoEstado}</td>
         `;
         
-        // Evento de selección (mantiene el resaltado de selección)
+        // Evento de selección
         fila.addEventListener('click', function() {
             if (filaSeleccionada) {
                 filaSeleccionada.classList.remove('seleccionado');
@@ -172,24 +313,16 @@ function mostrarEmpleados(empleados) {
     });
 }
 
-
-
-
-
-///////////////////////////////// GENERACIÓN DE CONTRATO PARA EMPLEADO ///////////////////////////
-
 // ==================== BÚSQUEDA CON FILTRO ====================
 searchInput.addEventListener('input', function() {
     const searchTerm = this.value.trim();
     
-    // Si no hay texto, mostrar todos
     if (searchTerm.length === 0) {
         searchInfo.textContent = '';
         mostrarEmpleados(todosLosEmpleados);
         return;
     }
     
-    // Si tiene menos de 3 letras, mostrar mensaje pero NO filtrar
     if (searchTerm.length < 3) {
         searchInfo.textContent = `Escribe al menos ${3 - searchTerm.length} letra(s) más`;
         searchInfo.style.color = '#ff9800';
@@ -197,7 +330,6 @@ searchInput.addEventListener('input', function() {
         return;
     }
     
-    // Filtrar empleados por nombre (solo cuando tiene 3 o más letras)
     const empleadosFiltrados = todosLosEmpleados.filter(empleado => 
         empleado.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -218,23 +350,130 @@ function abrirModal(empleado) {
     suscriptorSelect.value = '';
     numeroContratoInput.value = '';
     objetoContratoSelect.value = '';
+    inputTotal.value = '';
+    inputMeses.value = '';
+    inputMensual.value = '';
     
     modal.style.display = 'block';
 }
 
-// Cerrar modal al hacer click en la X
+// Cerrar modal
 closeModal.addEventListener('click', function() {
     modal.style.display = 'none';
     empleadoActual = null;
 });
 
-// Cerrar modal al hacer click fuera de él
 window.addEventListener('click', function(event) {
     if (event.target === modal) {
         modal.style.display = 'none';
         empleadoActual = null;
     }
 });
+
+// ==================== DATOS DE SUPERVISORES, OBJETOS Y CLÁUSULAS ====================
+const supervisoresData = {
+    "1": {
+        nombre: "RONALD DARIO FLOREZ SIERRA",
+        documento: "85.271.959"
+    },
+    "2": {
+        nombre: "GERALDINES GONZALEZ CERVANTES",
+        documento: "1.085.096.299"
+    },
+    "3": {
+        nombre: "Supervisor 3",
+        documento: "000.000.000"
+    }
+};
+
+const objetosContrato = {
+    "1": "PRESTACION DE SERVICIOS DE APOYO COMO AUXILIAR ADMINISTRATIVO – MENSAJERIA",
+    "2": "OTRO OBJETO DE CONTRATO"
+};
+
+const asignaciondeLider = {
+    "1" : "RONALD DARIO FLOREZ SIERRA, identificado con cédula de ciudadanía No 85.271.959 de El Banco, Magdalena, en su calidad de alcalde municipal de El Banco, departamento del Magdalena, tal como consta en el acta de posesión de fecha 28 de diciembre de 2023, emanada de la Notaría Única de El Banco, en uso de sus facultades constitucionales, legales y en ejercicio de la competencia otorgada por la ley 80 de 1993 (Articulo 11, Numeral 3°, Literal b),  y que para los efectos del presente contrato se denominará EL MUNICIPIO",
+}
+
+const clausulas = {
+    "1": {
+        "CLÁUSULA PRIMERA - DEFINICIONES:": "Los términos definidos son utilizados en singular y en plural de acuerdo con el contexto en el cual son utilizados. Otros términos utilizados con mayúscula inicial deben ser entendidos de acuerdo con la definición contenida en el Decreto 1082 de 2015. Los términos no definidos en los documentos referenciados o en la presente cláusula, deben entenderse de acuerdo con su significado natural y obvio.",
+        
+        "CLÁUSULA SEGUNDA - OBJETO DEL CONTRATO:": "PRESTACION DE SERVICIOS DE APOYO COMO AUXILIAR ADMINISTRATIVO – MENSAJERIA - DE LAS DISTINTAS DEPENDENCIAS DE LA ALCALDIA MUNICIPAL DE EL BANCO, MAGDALENA.",
+        
+        "CLÁUSULA TERCERA – ACTIVIDADES ESPECÍFICAS DEL CONTRATO:": "1. Realizar labores de mensajería en los diferentes procesos que se ejecuten o realicen las diferentes dependencias de la alcaldía municipal. 2. Redactar y preparar oficios, citaciones y texto en general en cumplimiento de los objetivos de las oficinas para darles el respectivo tramite. 3. Velar por la custodia de la información y documentos que por razón de las actividades realizadas tengan bajo su cuidado y mantener la reserva de la misma. 4. Llevar en forma correcta actualizada y de acuerdo con las instrucciones recibidas, el archivo de los documentos que se han encomendado aplicado a demás, las normas generales de archivo. 5. Responder y velar por el uso y mantenimiento de los bienes y elementos entregados por el municipio para el ejercicio de las actividades. 6. Mantener el orden y presentación de la oficina a su cargo. 7. Las demás que se requieran en razón de la ejecución del servicio y las demás que sean asignada por el supervisor del contrato.",
+        
+        "CLÁUSULA CUARTA – INFORMES:": "En desarrollo de las cláusulas 2 y 3 del presente contrato, el Contratista deberá presentar los informes o entregables en los que dé cuenta de las actuaciones realizadas al vencimiento de cada mes.",
+        
+        "CLÁUSULA QUINTA: VALOR DEL CONTRATO – FORMA DE PAGO – LUGAR DE EJECUCIÓN DEL CONTRATO:": "El valor del contrato asciende a la suma de [VALOR_LETRAS] PESOS M/CTE ($[VALOR_TOTAL]), incluyendo costos directos e indirectos que ocasione la ejecución del contrato. El valor total del contrato será cancelado en [TOTAL_MESES] cuotas mensuales vencidas, por valor de $[VALOR_MENSUAL] cada una, previo informe de actividades, pago a su seguridad social y recibido de conformidad por parte del Supervisor del Contrato. El lugar de ejecución del presente contrato es en el Municipio de El Banco – Magdalena.",
+
+        "CLÁUSULA SEXTA – DECLARACIONES DEL CONTRATISTA:" : " El CONTRATISTA hace las siguientes declaraciones: 1. Conozco y acepto los documentos del proceso. 2. Tuve la oportunidad de solicitar aclaraciones y modificaciones a los documentos del proceso y recibí del municipio respuesta oportuna a cada una de las solicitudes. 3. Me encuentro debidamente facultado para suscribir el presente contrato. 4. Que al momento de la celebración del presente contrato no me encuentro en ninguna causal de inhabilidad e incompatibilidad. 5. Estoy a paz y salvo con las obligaciones laborales y frente al sistema de seguridad social integral. 6. El valor del contrato incluye todos los gastos, costos, derechos, impuestos, tasas y demás contribuciones relacionadas con el cumplimiento del objeto del presente contrato.",
+
+        "CLÁUSULA SÉPTIMA – PLAZO DE EJECUCIÓN." : "El plazo de ejecución del presente contrato será de cinco ([TOTAL_MESES]) meses, contados a partir de la suscripción del acta de inicio.",
+
+        "CLÁUSULA OCTAVA – DERECHOS DEL CONTRATISTA:":" 1. Recibir la remuneración del contrato en los términos pactados en la cláusula Quinta del presente Contrato. 2. Las demás consagradas en el Artículo 5 de la Ley 80 de 1993.",
+        
+        "CLÁUSULA NOVENA – OBLIGACIONES GENERALES DEL CONTRATISTA:":"1. El CONTRATISTA se obliga a ejecutar el objeto del contrato y a desarrollar las actividades específicas en las condiciones pactadas. 2. El Contratista debe custodiar y a la terminación del presente contrato devolver los insumos, suministros, herramientas, dotación, implementación, inventarios y/o materiales que sean puestos a su disposición para la prestación del servicio objeto de este contrato. 3. Cumplir con el objeto del contrato de conformidad con lo dispuesto en el contrato que se suscribe. 4. Presentar un informe mensual de sus actividades 6. Las demás que por ley o el contrato le correspondan. 7. El contratista será responsable ante la autoridad de los actos u omisiones en el ejercicio de las actividades que desarrolle en virtud del contrato, cuando con ellos cause perjuicios a la administración o a terceros",
+        
+        "CLÁUSULA DECIMA – DERECHOS DEL CONTRATANTE:":"1. Hacer uso de la cláusula de imposición de multas, la cláusula penal o cualquier otro derecho consagrado al MUNICIPIO de manera legal o contractual. 2. Hacer uso de las cláusulas excepcionales del contrato.",
+        
+        "CLÁUSULA DECIMA PRIMERA – OBLIGACIONES GENERALES DEL CONTRATANTE:":" 1. Ejercer el respectivo control en el cumplimiento del objeto del contrato y expedir el recibo de cumplimiento a satisfacción. 2. Pagar el valor del contrato de acuerdo con los términos establecidos. 3. Suministrar al Contratista todos aquellos documentos, información e insumos que requiera para el desarrollo de la actividad encomendada. 4. Prestar su colaboración para el cumplimiento de las obligaciones del Contratista.",
+        
+        "CLÁUSULA DECIMA SEGUNDA – RESPONSABILIDAD: EL CONTRATISTA":"es responsable por el cumplimiento del objeto del presente Contrato. EL CONTRATISTA será responsable por los daños que ocasionen sus empleados y/o los empleados de sus subcontratistas, al MUNICIPIO en la ejecución del objeto del presente Contrato. PARÁGRAFO: Ninguna de las partes será responsable frente a la otra o frente a terceros por daños especiales, imprevisibles o daños indirectos, derivados de fuerza mayor o caso fortuito de acuerdo con la ley.",
+        
+        "CLÁUSULA DECIMA TERCERA – TERMINACIÓN, MODIFICACIÓN E INTERPRETACIÓN UNILATERAL DEL CONTRATO: EL MUNICIPIO ":"puede terminar, modificar y/o interpretar unilateralmente el contrato, de acuerdo con los artículos 15 a 17 de la Ley 80 de 1993, cuando lo considere necesario para que el Contratista cumpla con el objeto del presente Contrato.",
+        
+        "CLÁUSULA DECIMA CUARTA – CADUCIDAD:":"La caducidad, de acuerdo con las disposiciones y procedimientos legamente establecidos, puede ser declarada por EL MUNICIPIO cuando exista un incumplimiento OFICINA JURIDICA grave que afecte la ejecución del presente Contrato.",
+        
+        "CLÁUSULA DECIMA QUINTA – MULTAS:":"En caso de incumplimiento a las obligaciones del CONTRATISTA derivadas del presente contrato, EL MUNICIPIO puede adelantar el procedimiento establecido en la ley e imponer multas sucesivas del 0.1% del valor de la parte incumplida por cada día de mora, la cual podrá ser descontada de los créditos a favor del CONTRATISTA.",
+        
+        "CLÁUSULA DECIMA SEXTA – CLÁUSULA PENAL:":"En caso de declaratoria de caducidad o de incumplimiento total o parcial de las obligaciones del presente Contrato, EL CONTRATISTA debe pagar a EL MUNICIPIO, a título de indemnización, una suma equivalente al Diez por ciento (10%). El valor pactado de la presente cláusula penal es el de la estimación anticipada de perjuicios, no obstante, la presente cláusula no impide el cobro de todos los perjuicios adicionales que se causen sobre el citado valor. Este valor puede ser compensado con los montos que EL MUNICIPIO adeude al CONTRATISTA con ocasión de la ejecución del presente contrato, de conformidad con las reglas del Código Civil.",
+        
+        "CLÁUSULA DECIMA SÉPTIMA – GARANTÍAS Y MECANISMOS DE COBERTURA DEL RIESGO:": " De acuerdo a la naturaleza del contrato, de la actividad a ejecutar y de la forma de pago, EL MUNICIPIO se abstiene de exigir garantía.",
+        
+        "CLÁUSULA DECIMA OCTAVA – INDEPENDENCIA DEL CONTRATISTA:":"EL CONTRATISTA es una entidad independiente de EL MUNICIPIO, y, en consecuencia, EL CONTRATISTA no es su representante, agente o mandatario. EL CONTRATISTA no tiene la facultad de hacer declaraciones, representaciones o compromisos en nombre del MUNICIPIO, ni de tomar decisiones o iniciar acciones que generen obligaciones a su cargo. EL CONTRATISTA realizará la labor contratada de forma discrecional y autónoma y recibirá honorarios por los servicios prestados. ",
+        
+        "CLÁUSULA DECIMA NOVENA – CESIONES: EL CONTRATISTA":" no puede ceder parcial ni totalmente sus obligaciones o derechos derivados del presente contrato sin la autorización previa, expresa y escrita del MUNICIPIO. Si EL CONTRATISTA es objeto de fusión, escisión o cambio de control, EL MUNICIPIO está facultado a conocer las condiciones de esa operación. En consecuencia, EL CONTRATISTA se obliga a informar oportunamente a EL MUNICIPIO de la misma y solicitar su consentimiento. ",
+        
+        "CLÁUSULA VIGÉSIMA – INDEMNIDAD: EL CONTRATISTA":" se obliga a indemnizar a EL MUNICIPIO con ocasión de la violación o el incumplimiento de las obligaciones previstas en el presente contrato. EL CONTRATISTA se obliga a mantener indemne a EL MUNICIPIO de cualquier daño o perjuicio originado en reclamaciones de terceros que tengan como causa sus actuaciones hasta por el monto del daño o perjuicio causado y hasta por el valor del presente contrato. ",
+        
+        "CLÁUSULA VIGÉSIMA PRIMERA – CASO FORTUITO Y FUERZA MAYOR:":" Las partes quedan exoneradas de responsabilidad por el incumplimiento de cualquiera de sus obligaciones o por la demora en la satisfacción de cualquiera de las prestaciones a su cargo derivadas del presente contrato, cuando el incumplimiento sea resultado o consecuencia de la ocurrencia de un evento de fuerza mayor y caso fortuito debidamente invocadas y constatadas de acuerdo con la ley y la jurisprudencia.",
+        
+        "CLÁUSULA VIGÉSIMA SEGUNDA – SOLUCIÓN DE CONTROVERSIAS:":"Las controversias o diferencias que surjan entre EL CONTRATISTA y EL MUNICIPIO con ocasión de la firma, ejecución, interpretación, prórroga o terminación del contrato, así como de cualquier otro asunto relacionado con el presente contrato, serán sometidas a la revisión de las partes para buscar un arreglo directo, en un término no mayor a cinco (5) días hábiles a partir de la fecha en que cualquiera de las partes comunique por escrito a la otra la existencia de una diferencia. Las controversias que no puedan ser resueltas de forma directa entre las partes, se resolverán a través del proceso judicial correspondiente. ",
+        
+        "CLÁUSULA VIGÉSIMA TERCERA – SUPERVISIÓN:":" La supervisión de la ejecución y cumplimiento de las obligaciones contraídas por el CONTRATISTA a favor del MUNICIPIO, estará a cargo de la Secretaría Administrativa y Financiera. ",
+        
+        "CLÁUSULA VIGÉSIMA CUARTA – ANEXOS DEL CONTRATO:":" Hacen parte integrante de este contrato los siguientes documentos: 1. Los estudios previos. 2. Los documentos precontractuales. 3. Certificado de Disponibilidad Presupuestal. 4. Los demás que se estimen necesarios. ",
+
+        "CLÁUSULA VIGÉSIMA QUINTA – REGISTRO Y APROPIACIONES PRESUPUESTALES: EL MUNICIPIO:":"pagará AL CONTRATISTA el valor del presente Contrato con cargo al certificado de disponibilidad presupuestal No [NUMERO_PRESUPUESTAL] de fecha [FECHA_PRESUPUESTAL], por valor de $ [VALOR_TOTAL]. El presente Contrato está sujeto a registro presupuestal y el pago de su valor a las apropiaciones presupuestales de la Vigencia Fiscal 2026",
+
+        "CLÁUSULA VIGÉSIMA OCTAVA - CONFIDENCIALIDAD:":"En caso de que exista información sujeta a alguna reserva legal, las partes deben mantener la confidencialidad de esta información. Para ello, debe comunicar a la otra parte que la información suministrada tiene el carácter de confidencial.",
+
+        "CLÁUSULA VIGÉSIMA NOVENA – LUGAR DE EJECUCIÓN Y DOMICILIO CONTRACTUAL:":"Las actividades previstas en el presente contrato se deben desarrollar en el Municipio de El Banco – Magdalena y el domicilio contractual es el Municipio El Banco Magdalena. Para constancia, se firma en el Municipio de El Banco, Magdalena a los [FECHA_PRESUPUESTAL]. "
+    },
+    "2": {
+        "CLÁUSULA PRIMERA - OBJETO:": "Diferentes cláusulas para el objeto 2.",
+        "CLÁUSULA SEGUNDA - PLAZO:": "Otro plazo diferente.",
+        "CLÁUSULA TERCERA - VALOR:": "Otro valor.",
+        "CLÁUSULA CUARTA - FORMA DE PAGO:": "Otra forma de pago."
+    }
+};
+
+// ==================== FUNCIÓN AUXILIAR PARA CARGAR IMAGEN ====================
+async function obtenerImagenMarcaAgua(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.warn('⚠️ No se pudo cargar la imagen:', url);
+            return null;
+        }
+        const blob = await response.blob();
+        return blob;
+    } catch (error) {
+        console.error('❌ Error al cargar imagen:', error);
+        return null;
+    }
+}
 
 // ==================== GENERAR CONTRATO ====================
 btnGenerarContrato.addEventListener('click', async function() {
@@ -254,6 +493,18 @@ btnGenerarContrato.addEventListener('click', async function() {
     if (!objetoContratoSelect.value) {
         alert('Por favor seleccione el objeto del contrato');
         objetoContratoSelect.focus();
+        return;
+    }
+
+    if (!inputTotal.value) {
+        alert('Por favor ingrese el valor total del contrato');
+        inputTotal.focus();
+        return;
+    }
+
+    if (!inputMeses.value) {
+        alert('Por favor ingrese el total de meses');
+        inputMeses.focus();
         return;
     }
 
@@ -318,76 +569,186 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
         return;
     }
 
-    // 3. Intentar obtener la imagen (opcional)
-    const imagenBlob = await obtenerImagenMarcaAgua('../component/img/marcadeaguaJURIDICA.png');
-    console.log('🖼️ Imagen cargada:', imagenBlob ? 'Sí ✅' : 'No ❌');
+    // 3. Obtener valores del formulario
+    const valorTotal = limpiarNumero(inputTotal.value);
+    const valorTotalFormateado = formatearNumero(valorTotal);
+    const valorLetras = convertirNumeroALetras(parseInt(valorTotal));
+    const cantidadMeses = inputMeses.value;
+    const valorMensual = limpiarNumero(inputMensual.value);
+    const valorMensualFormateado = formatearNumero(valorMensual);
+    
+    // 🔹 NUEVOS VALORES DEL FORMULARIO
+    const numeroPresupuestal = document.getElementById('disponibilidadPresupuestal').value.trim();
+    const fechaPresupuestalInput = document.getElementById('fechaInicioPresupuestal').value;
+    const fechaPresupuestal = fechaPresupuestalInput ? fechaALetraYNumero(fechaPresupuestalInput) : "";
+    
+    const numeroDecreto = document.getElementById('decretoEncargo').value.trim();
+    const fechaDecretoInput = document.getElementById('fechaDecretoDesignado').value;
+    const fechaDecreto = fechaDecretoInput ? fechaALetraYNumero(fechaDecretoInput) : "";
+    
+    const fechaInicioLaboralInput = document.getElementById('fechaInicioLaboral').value;
+    const fechaInicioLaboral = fechaInicioLaboralInput ? fechaALetraYNumero(fechaInicioLaboralInput) : "";
+    
+    const fechaFinalLaboralInput = document.getElementById('fechaFinalLaboral').value;
+    const fechaFinalLaboral = fechaFinalLaboralInput ? fechaALetraYNumero(fechaFinalLaboralInput) : "";
 
-    // 4. Preparar párrafos del documento
-    const parrafos = [
-        // Título centrado
-        new docx.Paragraph({
-            children: [
-                new docx.TextRun({
-                    text: `CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES Y APOYO A LA GESTION No ${numeroContrato}`,
-                    bold: true,
-                    size: 24,
-                }),
-            ],
-            alignment: docx.AlignmentType.CENTER,
-            spacing: { after: 400, line: 360 }
-        }),
-
-        // Párrafo 1: Supervisora
-        new docx.Paragraph({
-            children: [
-                new docx.TextRun({ text: "Entre los suscritos a saber: ", size: 24 }),
-                new docx.TextRun({ text: supervisor.nombre, bold: true, size: 24 }),
-                new docx.TextRun({ text: ", identificada con cédula de ciudadanía No ", size: 24 }),
-                new docx.TextRun({ text: supervisor.documento, bold: true, size: 24 }),
-                new docx.TextRun({ text: " de El Banco, Magdalena, en su calidad de Alcalde Municipal Encargada de El Banco, departamento del Magdalena, mediante Decreto No. 015 del 26 de enero de 2026, en uso de sus facultades y funciones como Alcalde, de conformidad con lo establecido con el artículo 314 de la Constitución Política de Colombia, y en ejercicio de las facultades conferidas en el literal b del artículo 11 de la Ley 80 de 1993, y que para los efectos del presente contrato se denominará ", size: 24 }),
-                new docx.TextRun({ text: "EL MUNICIPIO", bold: true, size: 24 }),
-                new docx.TextRun({ text: ", y por otra parte ", size: 24 }),
-            ],
-            alignment: docx.AlignmentType.JUSTIFIED,
-            spacing: { after: 400, line: 360 }
-        }),
-
-        // Párrafo 2: El contratista (EMPLEADO)
-        new docx.Paragraph({
-            children: [
-                new docx.TextRun({ text: "y por otra parte ", size: 24 }),
-                new docx.TextRun({ text: nombre, bold: true, size: 24 }),
-                new docx.TextRun({ text: ", identificado(a) con cédula de ciudadanía No ", size: 24 }),
-                new docx.TextRun({ text: cedula, bold: true, size: 24 }),
-                new docx.TextRun({ text: ", quien en adelante se denominará ", size: 24 }),
-                new docx.TextRun({ text: "EL CONTRATISTA", bold: true, size: 24 }),
-                new docx.TextRun({ text: ", se celebra el presente contrato de prestación de servicios con el objeto de: ", size: 24 }),
-                new docx.TextRun({ text: objetoContrato, bold: true, size: 24 }),
-                new docx.TextRun({ text: ".", size: 24 }),
-            ],
-            alignment: docx.AlignmentType.JUSTIFIED,
-            spacing: { before: 200, after: 400, line: 360 }
-        }),
-    ];
-
-    // 5. Agregar todas las cláusulas dinámicamente
-    Object.entries(clausulasContrato).forEach(([key, textoClausula]) => {
-        parrafos.push(
-            new docx.Paragraph({
-                children: [
-                    new docx.TextRun({ text: textoClausula, size: 24 }),
-                ],
-                alignment: docx.AlignmentType.JUSTIFIED,
-                spacing: { after: 300, line: 360 }
-            })
-        );
+    console.log('💰 Valores:', {
+        valorTotal,
+        valorTotalFormateado,
+        valorLetras,
+        cantidadMeses,
+        valorMensual,
+        valorMensualFormateado,
+        numeroPresupuestal,
+        fechaPresupuestal,
+        numeroDecreto,
+        fechaDecreto,
+        fechaInicioLaboral,
+        fechaFinalLaboral
     });
 
-    // 6. Preparar configuración de sección
+    // 4. Intentar obtener la imagen (opcional)
+    const imagenBlob = await obtenerImagenMarcaAgua('component/img/marcadeaguaJURIDICA.png');
+    console.log('🖼️ Imagen cargada:', imagenBlob ? 'Sí ✅' : 'No ❌');
+
+    // 🔹 5. DETERMINAR QUÉ TEXTO USAR SEGÚN EL SUPERVISOR
+    let textoIntroductorio;
+    
+    if (supervisorId === "1" && asignaciondeLider["1"]) {
+        // Si es el supervisor "1", usar el texto especial de asignaciondeLider
+        textoIntroductorio = [
+            new docx.TextRun({ text: "Entre los suscritos a saber: ", size: 24, font: "Arial" }),
+            new docx.TextRun({ text: asignaciondeLider["1"], size: 24, font: "Arial" }),
+            new docx.TextRun({ text: ", y por otra parte ", size: 24, font: "Arial" }),
+        ];
+    } else {
+        // Para cualquier otro supervisor, usar el texto largo con sus datos
+        textoIntroductorio = [
+            new docx.TextRun({ text: "Entre los suscritos a saber: ", size: 24, font: "Arial" }),
+            new docx.TextRun({ text: supervisor.nombre, bold: true, size: 24, font: "Arial" }),
+            new docx.TextRun({ text: ", identificada con cédula de ciudadanía No ", size: 24, font: "Arial" }),
+            new docx.TextRun({ text: supervisor.documento, bold: true, size: 24, font: "Arial" }),
+            new docx.TextRun({ text: " de El Banco, Magdalena, en su calidad de Alcalde Municipal Encargada de El Banco, departamento del Magdalena, mediante Decreto No. ", size: 24, font: "Arial" }),
+            new docx.TextRun({ text: numeroDecreto || "[NUMERO_DECRETO]", bold: true, size: 24, font: "Arial" }),
+            new docx.TextRun({ text: " del ", size: 24, font: "Arial" }),
+            new docx.TextRun({ text: fechaDecreto || "[FECHA_DECRETO]", bold: true, size: 24, font: "Arial" }),
+            new docx.TextRun({ text: ", en uso de sus facultades y funciones como Alcalde, de conformidad con lo establecido con el artículo 314 de la Constitución Política de Colombia, y en ejercicio de las facultades conferidas en el literal b del artículo 11 de la Ley 80 de 1993, y que para los efectos del presente contrato se denominará ", size: 24, font: "Arial" }),
+            new docx.TextRun({ text: "EL MUNICIPIO", bold: true, size: 24, font: "Arial" }),
+            new docx.TextRun({ text: ", y por otra parte ", size: 24, font:"Arial" }),
+        ];
+    }
+
+    // 6. Preparar párrafos del documento
+        const parrafos = [
+            // Título centrado
+            new docx.Paragraph({
+                children: [
+                    new docx.TextRun({
+                        text: `CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES Y APOYO A LA GESTIÓN No ${numeroContrato}`,
+                        bold: true,
+                        size: 24,
+                        font: "Arial"  // 🔹 FUENTE
+                    }),
+                ],
+                alignment: docx.AlignmentType.CENTER,
+                spacing: { 
+                    after: 240,      // Espacio después del título
+                    line: 240,       // 🔹 ESPACIADO 1.0 (single spacing)
+                    lineRule: docx.LineRuleType.AUTO
+                }
+            }),
+
+            // Párrafo introductorio con cláusulas integradas
+            new docx.Paragraph({
+                children: [
+                    ...textoIntroductorio.map(run => {
+                        // 🔹 AGREGAR FUENTE A CADA TextRun EXISTENTE
+                        if (run.font === undefined) {
+                            run.font = "Arial";
+                        }
+                        return run;
+                    }),
+                    new docx.TextRun({ text: nombre, bold: true, size: 24, font: "Arial" }),
+                    new docx.TextRun({ text: ", identificado(a) con cédula de ciudadanía No ", size: 24, font: "Arial" }),
+                    new docx.TextRun({ text: cedula, bold: true, size: 24, font: "Arial" }),
+                    new docx.TextRun({ text: ", de El Banco, Magdalena, y quien actúa en nombre propio y en su condición de persona natural, se encuentra facultado para suscribir el presente documento y quien en adelante se denominará ", size: 24, font: "Arial" }),
+                    new docx.TextRun({ text: "EL CONTRATISTA", bold: true, size: 24, font: "Arial" }),
+                    new docx.TextRun({ text: ", hemos convenido en celebrar el presente Contrato de Prestación de Servicios Profesionales, teniendo en cuenta las siguientes consideraciones: ", size: 24, font: "Arial" }),
+                    new docx.TextRun({ text: "1. La Ley 80 de 1993 en el numeral 3º de su artículo 32 determinó que son contratos de prestación de servicios aquellos destinados al desarrollo de actividades relacionadas con la administración y funcionamiento de la entidad, los cuales no generan relación laboral ni prestaciones sociales y su celebración es por el término estrictamente indispensable. 2. El municipio desarrolló los respectivos estudios y documentos Previos, en el cual se consignó, la necesidad de contratar a una persona como; auxiliar administrativo – mensajería - de las distintas dependencias de la alcaldía. 3. Que el proceso de contratación se encuentra incluido en el plan anual de adquisiciones. 4. Que no existe personal de planta al servicio del municipio, para atender las específicas actividades a contratar y los servicios requeridos corresponden a actividades transitorias y ajenas al giro ordinario de las actividades permanentes de la entidad y demandan conocimientos especializados. 5. Que atendiendo la naturaleza de las actividades a desarrollar conforme a lo previsto en el artículo 2, numeral 4, literal h de la Ley 1150 de 2007 y en el decreto 1082 de 2015, el ente territorial, puede contratar bajo la modalidad de contratación directa la prestación de servicios profesionales y de apoyo a la gestión con la persona natural o jurídica que esté en capacidad de ejecutar el objeto del contrato, siempre y cuando, se verifique la idoneidad o experiencia requerida y relacionada con el área de que se trate. ", size: 24, font: "Arial"
+                    }),
+                    // 🔹 AQUÍ SE AGREGAN LAS CLÁUSULAS DINÁMICAMENTE
+                    ...generarClausulasTexto(clausulasContrato, {
+                        valorLetras,
+                        valorTotalFormateado,
+                        cantidadMeses,
+                        valorMensualFormateado,
+                        numeroPresupuestal,
+                        fechaPresupuestal,
+                        fechaInicioLaboral,
+                        fechaFinalLaboral,
+                        supervisor
+                    })
+                ],
+                alignment: docx.AlignmentType.JUSTIFIED,
+                spacing: { 
+                    after: 120,      // Espacio después del párrafo
+                    line: 240,       // 🔹 ESPACIADO 1.0 (single spacing = 240 twips)
+                    lineRule: docx.LineRuleType.AUTO
+                }
+            }),
+        ];
+
+    // 7. Función auxiliar para generar TextRuns de las cláusulas
+    function generarClausulasTexto(clausulas, datos) {
+        const textRuns = [];
+        
+        Object.entries(clausulas).forEach(([clave, valor]) => {
+            // Procesar la cláusula quinta con los valores del formulario
+            if (clave.includes("QUINTA")) {
+                valor = valor
+                    .replace("[VALOR_LETRAS]", datos.valorLetras)
+                    .replace("[VALOR_TOTAL]", datos.valorTotalFormateado)
+                    .replace("[TOTAL_MESES]", datos.cantidadMeses)
+                    .replace("[VALOR_MENSUAL]", datos.valorMensualFormateado);
+            }
+            
+            // 🔹 Procesar CLÁUSULA VIGÉSIMA QUINTA (presupuestal)
+            if (clave.includes("VIGÉSIMA QUINTA")) {
+                valor = valor
+                    .replace("[NUMERO_PRESUPUESTAL]", datos.numeroPresupuestal || "[NUMERO_PRESUPUESTAL]")
+                    .replace("[FECHA_PRESUPUESTAL]", datos.fechaPresupuestal || "[FECHA_PRESUPUESTAL]")
+                    .replace("[VALOR_TOTAL]", datos.valorTotalFormateado);
+            }
+            
+            // 🔹 Procesar CLÁUSULA VIGÉSIMA NOVENA (fecha final)
+            if (clave.includes("VIGÉSIMA NOVENA")) {
+                valor = valor
+                    .replace("[FECHA_PRESUPUESTAL]", datos.fechaPresupuestal || "[FECHA_PRESUPUESTAL]");
+            }
+            
+            // 🔹 Procesar CLÁUSULA SÉPTIMA (plazo de ejecución)
+            if (clave.includes("SÉPTIMA")) {
+                valor = valor
+                    .replace("[TOTAL_MESES]", datos.cantidadMeses);
+            }
+            
+            // 🔹 Agregar clave en negrita CON FUENTE
+            textRuns.push(new docx.TextRun({ text: clave + " ", bold: true, size: 24, font: "Arial" }));
+            // 🔹 Agregar valor en texto normal CON FUENTE
+            textRuns.push(new docx.TextRun({ text: valor + " ", size: 24, font: "Arial" }));
+        });
+        
+        return textRuns;
+    }
+
+    // 8. Preparar configuración de sección
     const sectionConfig = {
         properties: {
             page: {
-                size: { width: docx.convertInchesToTwip(8.5), height: docx.convertInchesToTwip(14) },
+                size: { 
+                    width: docx.convertInchesToTwip(8.5), 
+                    height: docx.convertInchesToTwip(14) 
+                },
                 margin: { 
                     top: docx.convertInchesToTwip(1), 
                     right: docx.convertInchesToTwip(1), 
@@ -429,14 +790,14 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
         }
     }
 
-    // 7. Crear el documento
+    // 9. Crear el documento
     const doc = new docx.Document({
         sections: [sectionConfig]
     });
 
     console.log('✅ Documento creado, exportando...');
 
-    // 8. Exportar con nombre personalizado
+    // 10. Exportar con nombre personalizado
     const blob = await docx.Packer.toBlob(doc);
     const nombreArchivo = `Contrato_${numeroContrato}_${nombre.replace(/\s+/g, '_')}.docx`;
     saveAs(blob, nombreArchivo);

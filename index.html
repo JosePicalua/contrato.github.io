@@ -58,8 +58,8 @@
             <label for="suscriptorSelect">Supervisor:</label>
             <select id="suscriptorSelect" class="form-control">
                 <option value="">Seleccione...</option>
-                <option value="1">GERALDINES GONZALEZ CERVANTES</option>
-                <option value="2">Colocar Supervisor</option>
+                <option value="1">RONALD DARIO FLOREZ SIERRA</option>
+                <option value="2">GERALDINES GONZALEZ CERVANTES</option>
                 <option value="3">Colocar Supervisor</option>
             </select>
         </div>
@@ -76,6 +76,67 @@
                 <option value="1">SERVICIOS DE APOYO COMO AUXILIAR ADMINISTRATIVO – MENSAJERIA</option>
             </select>
         </div>
+
+        <div class="form-group">
+            <label for="totalContrato">Total del Contrato:</label>
+            <input type="text" id="totalContrato" class="form-control" placeholder="Ingrese el total del contrato" />
+        </div>
+
+        <div class="form-group">
+            <label for="totalMeses">Total de Meses:</label>
+            <input type="text" id="totalMeses" class="form-control" placeholder="Ingrese el total de meses del contrato" />
+        </div>
+
+        
+        <div class="form-group">
+            <label for="valorMensual">Valor Mensual:</label>
+            <input type="text" id="valorMensual" class="form-control" readonly style="background-color: #f0f0f0;"/>
+        </div>
+
+        <div class="form-group">
+            <label for="disponibilidadPresupuestal">Numero de Servicio Presupuestal:</label>
+            <input type="text" id="disponibilidadPresupuestal" class="form-control" placeholder="Numero Autorizado para generar Contrato" />
+        </div>
+        
+        <div class="form-group">
+            <label for="fechaInicioPresupuestal">Fecha de Decreto de Servicio Presupuestal:</label>
+            <input type="date" id="fechaInicioPresupuestal" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label for="decretoEncargo">Numero de Decreto Designado</label>
+            <input type="text" id="decretoEncargo" class="form-control" placeholder="Ingrese el número del decreto designado" />
+        </div>
+
+        <div class="form-group">
+            <label for="fechaDecretoDesignado">Fecha de Decreto Designado:</label>
+            <input type="date" id="fechaDecretoDesignado" class="form-control"/>
+        </div>
+
+        <!-- Input para SELECCIONAR la fecha de inicio laboral -->
+        <div class="form-group">
+            <label for="fechaInicioLaboralSelector">Seleccionar Fecha de Inicio Laboral:</label>
+            <input type="date" id="fechaInicioLaboralSelector" class="form-control"/>
+        </div>
+
+        <!-- Input para MOSTRAR la fecha de inicio laboral (texto formateado) -->
+        <div class="form-group">
+            <label for="fechaInicioLaboral">Fecha de Inicio Laboral (Formato Contrato):</label>
+            <input type="text" id="fechaInicioLaboral" class="form-control" readonly style="background-color: #f0f0f0;"/>
+        </div>
+
+        <!-- Input para SELECCIONAR la fecha final laboral -->
+        <div class="form-group">
+            <label for="fechaFinalLaboralSelector">Seleccionar Fecha de Finalización Laboral:</label>
+            <input type="date" id="fechaFinalLaboralSelector" class="form-control"/>
+        </div>
+
+        <!-- Input para MOSTRAR la fecha final laboral (texto formateado) -->
+        <div class="form-group">
+            <label for="fechaFinalLaboral">Fecha de Finalización Laboral (Formato Contrato):</label>
+            <input type="text" id="fechaFinalLaboral" class="form-control" readonly style="background-color: #f0f0f0;"/>
+        </div>
+
         
         <button id="btnGenerarContrato">Generar Contrato</button>
     </div>
@@ -83,6 +144,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<script src="../component/js/index.js"></script>   s
+<script src="../component/js/index.js"></script>   
 </body>
 </html>
