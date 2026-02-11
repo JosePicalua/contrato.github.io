@@ -639,65 +639,239 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
     }
 
     // 6. Preparar párrafos del documento
-        const parrafos = [
-            // Título centrado
-            new docx.Paragraph({
-                children: [
-                    new docx.TextRun({
-                        text: `CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES Y APOYO A LA GESTIÓN No ${numeroContrato}`,
-                        bold: true,
-                        size: 24,
-                        font: "Arial"  // 🔹 FUENTE
-                    }),
-                ],
-                alignment: docx.AlignmentType.CENTER,
-                spacing: { 
-                    after: 240,      // Espacio después del título
-                    line: 240,       // 🔹 ESPACIADO 1.0 (single spacing)
-                    lineRule: docx.LineRuleType.AUTO
-                }
-            }),
+    const parrafos = [
+        // Título centrado
+        new docx.Paragraph({
+            children: [
+                new docx.TextRun({
+                    text: `CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES Y APOYO A LA GESTIÓN No ${numeroContrato}`,
+                    bold: true,
+                    size: 24,
+                    font: "Arial"
+                }),
+            ],
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { 
+                after: 240,
+                line: 240,
+                lineRule: docx.LineRuleType.AUTO
+            }
+        }),
 
-            // Párrafo introductorio con cláusulas integradas
-            new docx.Paragraph({
-                children: [
-                    ...textoIntroductorio.map(run => {
-                        // 🔹 AGREGAR FUENTE A CADA TextRun EXISTENTE
-                        if (run.font === undefined) {
-                            run.font = "Arial";
-                        }
-                        return run;
-                    }),
-                    new docx.TextRun({ text: nombre, bold: true, size: 24, font: "Arial" }),
-                    new docx.TextRun({ text: ", identificado(a) con cédula de ciudadanía No ", size: 24, font: "Arial" }),
-                    new docx.TextRun({ text: cedula, bold: true, size: 24, font: "Arial" }),
-                    new docx.TextRun({ text: ", de El Banco, Magdalena, y quien actúa en nombre propio y en su condición de persona natural, se encuentra facultado para suscribir el presente documento y quien en adelante se denominará ", size: 24, font: "Arial" }),
-                    new docx.TextRun({ text: "EL CONTRATISTA", bold: true, size: 24, font: "Arial" }),
-                    new docx.TextRun({ text: ", hemos convenido en celebrar el presente Contrato de Prestación de Servicios Profesionales, teniendo en cuenta las siguientes consideraciones: ", size: 24, font: "Arial" }),
-                    new docx.TextRun({ text: "1. La Ley 80 de 1993 en el numeral 3º de su artículo 32 determinó que son contratos de prestación de servicios aquellos destinados al desarrollo de actividades relacionadas con la administración y funcionamiento de la entidad, los cuales no generan relación laboral ni prestaciones sociales y su celebración es por el término estrictamente indispensable. 2. El municipio desarrolló los respectivos estudios y documentos Previos, en el cual se consignó, la necesidad de contratar a una persona como; auxiliar administrativo – mensajería - de las distintas dependencias de la alcaldía. 3. Que el proceso de contratación se encuentra incluido en el plan anual de adquisiciones. 4. Que no existe personal de planta al servicio del municipio, para atender las específicas actividades a contratar y los servicios requeridos corresponden a actividades transitorias y ajenas al giro ordinario de las actividades permanentes de la entidad y demandan conocimientos especializados. 5. Que atendiendo la naturaleza de las actividades a desarrollar conforme a lo previsto en el artículo 2, numeral 4, literal h de la Ley 1150 de 2007 y en el decreto 1082 de 2015, el ente territorial, puede contratar bajo la modalidad de contratación directa la prestación de servicios profesionales y de apoyo a la gestión con la persona natural o jurídica que esté en capacidad de ejecutar el objeto del contrato, siempre y cuando, se verifique la idoneidad o experiencia requerida y relacionada con el área de que se trate. ", size: 24, font: "Arial"
-                    }),
-                    // 🔹 AQUÍ SE AGREGAN LAS CLÁUSULAS DINÁMICAMENTE
-                    ...generarClausulasTexto(clausulasContrato, {
-                        valorLetras,
-                        valorTotalFormateado,
-                        cantidadMeses,
-                        valorMensualFormateado,
-                        numeroPresupuestal,
-                        fechaPresupuestal,
-                        fechaInicioLaboral,
-                        fechaFinalLaboral,
-                        supervisor
-                    })
-                ],
-                alignment: docx.AlignmentType.JUSTIFIED,
-                spacing: { 
-                    after: 120,      // Espacio después del párrafo
-                    line: 240,       // 🔹 ESPACIADO 1.0 (single spacing = 240 twips)
-                    lineRule: docx.LineRuleType.AUTO
-                }
-            }),
-        ];
+        // Párrafo introductorio con cláusulas integradas
+        new docx.Paragraph({
+            children: [
+                ...textoIntroductorio.map(run => {
+                    if (run.font === undefined) {
+                        run.font = "Arial";
+                    }
+                    return run;
+                }),
+                new docx.TextRun({ text: nombre, bold: true, size: 24, font: "Arial" }),
+                new docx.TextRun({ text: ", identificado(a) con cédula de ciudadanía No ", size: 24, font: "Arial" }),
+                new docx.TextRun({ text: cedula, bold: true, size: 24, font: "Arial" }),
+                new docx.TextRun({ text: ", de El Banco, Magdalena, y quien actúa en nombre propio y en su condición de persona natural, se encuentra facultado para suscribir el presente documento y quien en adelante se denominará ", size: 24, font: "Arial" }),
+                new docx.TextRun({ text: "EL CONTRATISTA", bold: true, size: 24, font: "Arial" }),
+                new docx.TextRun({ text: ", hemos convenido en celebrar el presente Contrato de Prestación de Servicios Profesionales, teniendo en cuenta las siguientes consideraciones: ", size: 24, font: "Arial" }),
+                new docx.TextRun({ text: "1. La Ley 80 de 1993 en el numeral 3º de su artículo 32 determinó que son contratos de prestación de servicios aquellos destinados al desarrollo de actividades relacionadas con la administración y funcionamiento de la entidad, los cuales no generan relación laboral ni prestaciones sociales y su celebración es por el término estrictamente indispensable. 2. El municipio desarrolló los respectivos estudios y documentos Previos, en el cual se consignó, la necesidad de contratar a una persona como; auxiliar administrativo – mensajería - de las distintas dependencias de la alcaldía. 3. Que el proceso de contratación se encuentra incluido en el plan anual de adquisiciones. 4. Que no existe personal de planta al servicio del municipio, para atender las específicas actividades a contratar y los servicios requeridos corresponden a actividades transitorias y ajenas al giro ordinario de las actividades permanentes de la entidad y demandan conocimientos especializados. 5. Que atendiendo la naturaleza de las actividades a desarrollar conforme a lo previsto en el artículo 2, numeral 4, literal h de la Ley 1150 de 2007 y en el decreto 1082 de 2015, el ente territorial, puede contratar bajo la modalidad de contratación directa la prestación de servicios profesionales y de apoyo a la gestión con la persona natural o jurídica que esté en capacidad de ejecutar el objeto del contrato, siempre y cuando, se verifique la idoneidad o experiencia requerida y relacionada con el área de que se trate. ", size: 24, font: "Arial"
+                }),
+                ...generarClausulasTexto(clausulasContrato, {
+                    valorLetras,
+                    valorTotalFormateado,
+                    cantidadMeses,
+                    valorMensualFormateado,
+                    numeroPresupuestal,
+                    fechaPresupuestal,
+                    fechaInicioLaboral,
+                    fechaFinalLaboral,
+                    supervisor
+                })
+            ],
+            alignment: docx.AlignmentType.JUSTIFIED,
+            spacing: { 
+                after: 120,
+                line: 240,
+                lineRule: docx.LineRuleType.AUTO
+            }
+        }),
 
+        // 🔹 ESPACIO ANTES DE LAS FIRMAS
+        new docx.Paragraph({
+            children: [new docx.TextRun({ text: "", size: 24, font: "Arial" })],
+            spacing: { after: 480 }
+        }),
+
+        // 🔹 SECCIÓN DE FIRMAS - TABLA CON DOS COLUMNAS (SOLO ESTO)
+        new docx.Table({
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE,
+            },
+            borders: {
+                top: { style: docx.BorderStyle.NONE },
+                bottom: { style: docx.BorderStyle.NONE },
+                left: { style: docx.BorderStyle.NONE },
+                right: { style: docx.BorderStyle.NONE },
+                insideHorizontal: { style: docx.BorderStyle.NONE },
+                insideVertical: { style: docx.BorderStyle.NONE },
+            },
+            rows: [
+                // Fila 1: "Firmado en original"
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ 
+                                            text: "Firmado en original", 
+                                            bold: true, 
+                                            size: 24, 
+                                            font: "Arial",
+                                            color: "FF0000"
+                                        })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 120, line: 240, lineRule: docx.LineRuleType.AUTO }
+                                })
+                            ],
+                            borders: {
+                                top: { style: docx.BorderStyle.NONE },
+                                bottom: { style: docx.BorderStyle.NONE },
+                                left: { style: docx.BorderStyle.NONE },
+                                right: { style: docx.BorderStyle.NONE },
+                            },
+                            width: { size: 50, type: docx.WidthType.PERCENTAGE }
+                        }),
+                        new docx.TableCell({
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ 
+                                            text: "Firmado en original", 
+                                            bold: true, 
+                                            size: 24, 
+                                            font: "Arial",
+                                            color: "FF0000"
+                                        })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 120, line: 240, lineRule: docx.LineRuleType.AUTO }
+                                })
+                            ],
+                            borders: {
+                                top: { style: docx.BorderStyle.NONE },
+                                bottom: { style: docx.BorderStyle.NONE },
+                                left: { style: docx.BorderStyle.NONE },
+                                right: { style: docx.BorderStyle.NONE },
+                            },
+                            width: { size: 50, type: docx.WidthType.PERCENTAGE }
+                        })
+                    ]
+                }),
+                // Fila 2: Nombres
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ 
+                                            text: supervisor.nombre.toUpperCase(), 
+                                            bold: true, 
+                                            size: 24, 
+                                            font: "Arial"
+                                        })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 60, line: 240, lineRule: docx.LineRuleType.AUTO }
+                                })
+                            ],
+                            borders: {
+                                top: { style: docx.BorderStyle.NONE },
+                                bottom: { style: docx.BorderStyle.NONE },
+                                left: { style: docx.BorderStyle.NONE },
+                                right: { style: docx.BorderStyle.NONE },
+                            },
+                            width: { size: 50, type: docx.WidthType.PERCENTAGE }
+                        }),
+                        new docx.TableCell({
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ 
+                                            text: nombre.toUpperCase(), 
+                                            bold: true, 
+                                            size: 24, 
+                                            font: "Arial"
+                                        })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 60, line: 240, lineRule: docx.LineRuleType.AUTO }
+                                })
+                            ],
+                            borders: {
+                                top: { style: docx.BorderStyle.NONE },
+                                bottom: { style: docx.BorderStyle.NONE },
+                                left: { style: docx.BorderStyle.NONE },
+                                right: { style: docx.BorderStyle.NONE },
+                            },
+                            width: { size: 50, type: docx.WidthType.PERCENTAGE }
+                        })
+                    ]
+                }),
+                // Fila 3: Cargos
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ 
+                                            text: "Alcalde Municipal", 
+                                            size: 24, 
+                                            font: "Arial"
+                                        })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 120, line: 240, lineRule: docx.LineRuleType.AUTO }
+                                })
+                            ],
+                            borders: {
+                                top: { style: docx.BorderStyle.NONE },
+                                bottom: { style: docx.BorderStyle.NONE },
+                                left: { style: docx.BorderStyle.NONE },
+                                right: { style: docx.BorderStyle.NONE },
+                            },
+                            width: { size: 50, type: docx.WidthType.PERCENTAGE }
+                        }),
+                        new docx.TableCell({
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ 
+                                            text: "Contratista", 
+                                            size: 24, 
+                                            font: "Arial"
+                                        })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 120, line: 240, lineRule: docx.LineRuleType.AUTO }
+                                })
+                            ],
+                            borders: {
+                                top: { style: docx.BorderStyle.NONE },
+                                bottom: { style: docx.BorderStyle.NONE },
+                                left: { style: docx.BorderStyle.NONE },
+                                right: { style: docx.BorderStyle.NONE },
+                            },
+                            width: { size: 50, type: docx.WidthType.PERCENTAGE }
+                        })
+                    ]
+                })
+            ]
+        }),
+    ];
     // 7. Función auxiliar para generar TextRuns de las cláusulas
     function generarClausulasTexto(clausulas, datos) {
         const textRuns = [];
@@ -750,7 +924,8 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
                     height: docx.convertInchesToTwip(14) 
                 },
                 margin: { 
-                    top: docx.convertInchesToTwip(1), 
+                    // Cámbialo a 2 o 2.5 para que el texto baje más.
+                    top: docx.convertInchesToTwip(2),
                     right: docx.convertInchesToTwip(1), 
                     bottom: docx.convertInchesToTwip(1), 
                     left: docx.convertInchesToTwip(1) 
@@ -765,7 +940,10 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
         try {
             const marcaDeAgua = new docx.ImageRun({
                 data: imagenBlob,
-                transformation: { width: 450, height: 450 },
+                transformation: { 
+                    width: 816,   // 🔹 21.59 cm
+                    height: 1293  // 🔹 31.56 cm
+                },
                 floating: {
                     horizontalPosition: {
                         relative: docx.HorizontalPositionRelativeFrom.PAGE, 
@@ -773,7 +951,8 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
                     },
                     verticalPosition: { 
                         relative: docx.VerticalPositionRelativeFrom.PAGE, 
-                        align: docx.VerticalPositionAlign.CENTER 
+                        // 🔹 Ajusta este número: menor = más arriba, mayor = más abajo
+                        offset: 0 
                     },
                     behindDocument: true,
                 },
