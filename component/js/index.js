@@ -777,7 +777,8 @@ function ocultarLoader() {
     document.getElementById('loaderDrive').style.display = 'none';
 }
 
-async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContrato, objetoId, sectionConfig) {
+// DESPUÉS (sin el parámetro sectionConfig):
+async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContrato, objetoId) {
     console.log('✅ Generando contrato para:', nombre);
     console.log('📋 Parámetros:', { nombre, cedula, supervisorId, numeroContrato, objetoId });
 
