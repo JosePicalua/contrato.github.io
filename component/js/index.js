@@ -216,102 +216,251 @@ function convertirNumeroALetras(num) {
     return "Número demasiado grande";
 }
 
-// ==================== CARGAR CSV AL INICIAR ====================
-cargarCSV();
 
-async function cargarCSV() {
-    try {
-        const response = await fetch('csvTrabajadores/trabajadores.csv');
-        const data = await response.text();
-        
-        console.log('CSV cargado:', data);
-        
-        // Parsear CSV
-        const lineas = data.split('\n');
-        todosLosEmpleados = [];
-        
-        // Saltar la primera línea (encabezados) y procesar el resto
-        for (let i = 1; i < lineas.length; i++) {
-            const linea = lineas[i].trim();
-            if (linea) {
-                const columnas = linea.split(',');
-                todosLosEmpleados.push({
-                    nombre_completo: columnas[0]?.trim() || '',
-                    cedula: columnas[1]?.trim() || '',
-                    estado: columnas[2]?.trim() || ''
-                });
-            }
+
+
+
+/// ============================== CONFIGURACION DE LECTURA DE DATOS POR API DE GOOGLE SHEETS ==============================
+
+
+    // ==================== CONFIGURACIÓN ====================
+    const SPREADSHEET_ID = '1SGlZCxM3bDcyOvt9DyrlmoUx0KZ48-vja8gRf27Qs8A';
+    const SHEET_NAME     = 'data'; // Sin comillas simples
+    const RANGE          = 'A2:C';
+
+    const API_CONFIG = {
+        getApiKey: () => {
+            const match = document.cookie.match(/(?:^|; )sheets_api_key=([^;]*)/);
+            return match ? decodeURIComponent(match[1]) : null;
+        },
+        setApiKey: (key) => {
+            document.cookie = `sheets_api_key=${encodeURIComponent(key)}; max-age=31536000; path=/; SameSite=Strict`;
+        },
+        // --- NUEVO: Gestión del Client ID ---
+        getClientId: () => {
+            const match = document.cookie.match(/(?:^|; )google_client_id=([^;]*)/);
+            return match ? decodeURIComponent(match[1]) : null;
+        },
+        setClientId: (id) => {
+            document.cookie = `google_client_id=${encodeURIComponent(id)}; max-age=31536000; path=/; SameSite=Strict`;
         }
-        
-        console.log('Empleados parseados:', todosLosEmpleados);
-        
-        // Mostrar todos los empleados inicialmente
-        mostrarEmpleados(todosLosEmpleados);
-        
-    } catch (error) {
-        console.error('Error al cargar el CSV:', error);
-        tablaEmpleados.innerHTML = '<tr><td colspan="2" style="text-align: center; color: red;">Error al cargar los datos</td></tr>';
-    }
-}
+    };
 
-/* global docx, saveAs */
+    let API_KEY = null;
 
-// Verificar que docx esté disponible
-const esperarDocx = setInterval(() => {
-    if (window.docx) {
-        console.log("✅ Librería docx cargada y lista.");
-        clearInterval(esperarDocx);
-    }
-}, 500);
+    console.log('📋 Configuración cargada:', { SPREADSHEET_ID, SHEET_NAME, RANGE });
 
-// ==================== MOSTRAR EMPLEADOS EN LA TABLA ====================
-function mostrarEmpleados(empleados) {
-    tablaEmpleados.innerHTML = '';
-    filaSeleccionada = null; 
-    
-    if (empleados.length === 0) {
-        tablaEmpleados.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">No se encontraron resultados</td></tr>';
-        return;
-    }
-    
-    empleados.forEach(empleado => {
-        const fila = document.createElement('tr');
-        
-        // Lógica de colores basada en el estado
-        let claseFila = '';
-        let textoEstado = empleado.estado ? empleado.estado.trim() : "";
-
-        if (textoEstado === "" || textoEstado === " ") {
-            claseFila = 'fila-amarilla'; // Pendiente
-            textoEstado = "Pendiente";
-        } else if (textoEstado.toLowerCase() === "realizado") {
-            claseFila = 'fila-verde';    // Realizado
-        } else if (textoEstado.toLowerCase() === "no hacer") {
-            claseFila = 'fila-roja';     // No Hacer
+    // ==================== FUNCIONES AUXILIARES ====================
+    function mostrarEstado(mensaje, tipo = 'info') {
+        const el = document.getElementById('estadoConexion');
+        if (el) {
+            el.textContent = mensaje;
+            const colores = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
+            el.style.color = colores[tipo] || colores.info;
         }
+        console.log(mensaje);
+    }
 
-        // Aplicar la clase a toda la fila
-        fila.className = claseFila;
+    function mostrarMensaje(mensaje, tipo = 'info') {
+        const simbolos = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        mostrarEstado(`${simbolos[tipo]} ${mensaje}`, tipo);
+    }
 
-        fila.innerHTML = `
-            <td>${empleado.nombre_completo}</td>
-            <td>${empleado.cedula}</td>
-            <td style="font-weight: bold; text-align: center;">${textoEstado}</td>
-        `;
-        
-        // Evento de selección
-        fila.addEventListener('click', function() {
-            if (filaSeleccionada) {
-                filaSeleccionada.classList.remove('seleccionado');
-            }
-            this.classList.add('seleccionado');
-            filaSeleccionada = this;
-            abrirModal(empleado);
-        });
-        
-        tablaEmpleados.appendChild(fila);
+    // ==================== INICIO ====================
+    // Espera a que GAPI esté disponible y luego arranca
+    function esperarGapiYArrancar() {
+        if (typeof gapi === 'undefined') {
+            setTimeout(esperarGapiYArrancar, 100);
+            return;
+        }
+        gapi.load('client', initializeGapiClient);
+    }
+
+    function arrancarConApiKey(key) {
+        API_KEY = key;
+        mostrarMensaje('Conectada', 'success');
+        esperarGapiYArrancar();
+    }
+
+    window.addEventListener('load', () => {
+        const savedKey = API_CONFIG.getApiKey();
+
+        if (!savedKey) {
+            mostrarMensaje('Configuración requerida: API Key de Google Sheets', 'warning');
+            setTimeout(() => {
+                const userApiKey = prompt(
+                    "🔑 Configuración Google Sheets\n\n" +
+                    "Pega tu API Key de Google Cloud Console:"
+                );
+                if (userApiKey && userApiKey.trim()) {
+                    API_CONFIG.setApiKey(userApiKey.trim());
+                    arrancarConApiKey(userApiKey.trim());
+                } else {
+                    mostrarMensaje('Sin API Key. Recarga la página para configurarla.', 'warning');
+                }
+            }, 300);
+        } else {
+            arrancarConApiKey(savedKey);
+        }
     });
-}
+
+    // ==================== INICIALIZACIÓN GAPI ====================
+    async function initializeGapiClient() {
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+        });
+        console.log('✓ API de Google cargada');
+        document.getElementById('panelPrincipal').style.display = 'block';
+        await cargarDatosGoogleSheets();
+    }
+
+    // ==================== CARGAR DATOS ====================
+    async function cargarDatosGoogleSheets() {
+        try {
+            const spreadsheetId = '1SGlZCxM3bDcyOvt9DyrlmoUx0KZ48-vja8gRf27Qs8A';
+            
+            // Intentamos con el formato más compatible
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: spreadsheetId,
+                range: "trabajadores!A2:C", 
+            });
+
+            const rows = response.result.values;
+            if (!rows) throw new Error("No se recibieron filas");
+
+            todosLosEmpleados = rows.map(fila => ({
+                nombre_completo: fila[0] || '',
+                cedula:          fila[1] || '',
+                estado:          fila[2] || ''
+            }));
+
+            mostrarEmpleados(todosLosEmpleados);
+
+        } catch (error) {
+            console.error("Detalle del error:", error);
+            const msg = error.result?.error?.message || "Error desconocido";
+            
+            // Si sigue fallando el parseo, intentamos leer TODO el archivo (sin rango)
+            if (msg.includes("Unable to parse range")) {
+                console.warn("Reintentando sin nombre de hoja...");
+                // Intentar solo A2:C (esto busca en la primera hoja por defecto)
+                try {
+                    const retry = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: spreadsheetId,
+                        range: "A2:C", 
+                    });
+                    mostrarEmpleados(retry.result.values.map(f => ({nombre_completo: f[0], cedula: f[1], estado: f[2]})));
+                } catch(e) {
+                    mostrarMensaje("Error persistente: " + msg, "error");
+                }
+            }
+        }
+    }
+
+
+    function getBgColor(clase) {
+        const colores = {
+            'badge-success': '#10b981', // Verde Esmeralda 
+            'badge-warning': '#f59e0b', // Ambar
+            'badge-danger':  '#ef4444', // Rojo Coral
+            'badge-info':    '#3b82f6'  // Azul Brillante
+        };
+        return colores[clase] || colores['badge-info'];
+    }
+
+
+    function mostrarEmpleados(empleados) {
+        const tbody = document.getElementById('tablaEmpleados');
+        tbody.innerHTML = '';
+
+        empleados.forEach(empleado => {
+            const fila = document.createElement('tr');
+            fila.style.borderBottom = "1px solid #f0f0f0";
+
+            fila.innerHTML = `
+                <td style="padding: 15px; vertical-align: middle;">
+                    <div style="font-weight: 600; color: #2c3e50; font-size: 0.95rem;">${empleado.nombre_completo}</div>
+                    <div style="font-size: 0.75rem; color: #95a5a6; margin-top: 2px;">Empleado Verificado</div>
+                </td>
+                <td style="padding: 15px; vertical-align: middle; font-family: 'JetBrains Mono', monospace; color: #7f8c8d; font-size: 0.9rem;">
+                    ${empleado.cedula}
+                </td>
+                <td style="padding: 15px; vertical-align: middle;">
+                    <span style="
+                        padding: 5px 12px; 
+                        border-radius: 20px; 
+                        font-size: 0.75rem; 
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        background-color: ${getBgColor(empleado.claseEstado)}15; /* Color con 15% opacidad */
+                        color: ${getBgColor(empleado.claseEstado)};
+                        border: 1px solid ${getBgColor(empleado.claseEstado)}40;">
+                        ${empleado.estado || 'Pendiente'}
+                    </span>
+                </td>
+                <td style="padding: 15px; text-align: right; vertical-align: middle;">
+                    <button onclick="gestionarClicEmpleado('${empleado.cedula}')" class="btn-gestionar">
+                        <span style="margin-right: 6px;">📄</span> Gestionar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(fila);
+        });
+    }
+
+
+    function gestionarClicEmpleado(cedula) {
+        // Buscamos el objeto completo del empleado en nuestro array global
+        const empleado = todosLosEmpleados.find(e => e.cedula === cedula);
+        
+        if (empleado) {
+            abrirModal(empleado);
+        } else {
+            console.error("No se encontró el empleado con cédula:", cedula);
+        }
+    }
+
+    function obtenerClaseEstado(estado) {
+        const est = estado.toLowerCase();
+        if (est.includes('activ') || est.includes('listo')) return 'badge-success';
+        if (est.includes('pendient') || est.includes('espera')) return 'badge-warning';
+        if (est.includes('error') || est.includes('rechaz')) return 'badge-danger';
+        return 'badge-info';
+    }
+    // Auxiliar para colores rápidos
+    function getBgColor(clase) {
+        if (clase === 'badge-success') return '#28a745';
+        if (clase === 'badge-warning') return '#f39c12';
+        if (clase === 'badge-danger') return '#e74c3c';
+        return '#3498db';
+    }
+
+    // ==================== BÚSQUEDA ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('searchInput');
+        const info  = document.getElementById('searchInfo');
+
+        input.addEventListener('input', () => {
+            const q = input.value.trim().toLowerCase();
+            if (q.length === 0) {
+                mostrarEmpleados(todosLosEmpleados);
+                info.textContent = '';
+                return;
+            }
+            if (q.length < 3) {
+                info.textContent = 'Mínimo 3 caracteres';
+                return;
+            }
+            const filtrados = todosLosEmpleados.filter(e =>
+                e.nombre_completo.toLowerCase().includes(q)
+            );
+            mostrarEmpleados(filtrados);
+            info.textContent = `${filtrados.length} resultado(s)`;
+        });
+    });
+
 
 // ==================== BÚSQUEDA CON FILTRO ====================
 searchInput.addEventListener('input', function() {
@@ -340,21 +489,37 @@ searchInput.addEventListener('input', function() {
     mostrarEmpleados(empleadosFiltrados);
 });
 
+
+
+
+// ==================== TERMINACION DE LECTURA DE DATOS ====================
+
+
+// ==================== FUNCIONES PARA CONTRATO ====================
+
 // ==================== FUNCIONES DEL MODAL ====================
 function abrirModal(empleado) {
     empleadoActual = empleado;
-    modalCedula.textContent = empleado.cedula;
-    modalNombre.textContent = empleado.nombre_completo;
     
-    // Limpiar campos del formulario
-    suscriptorSelect.value = '';
-    numeroContratoInput.value = '';
-    objetoContratoSelect.value = '';
-    inputTotal.value = '';
-    inputMeses.value = '';
-    inputMensual.value = '';
+    // Asignar datos a los textos del modal
+    document.getElementById('modalCedula').textContent = empleado.cedula;
+    document.getElementById('modalNombre').textContent = empleado.nombre_completo.toUpperCase();
     
+    // Limpiar campos del formulario para un nuevo registro
+    // Asegúrate de que estos IDs coincidan exactamente con tu HTML
+    const camposALimpiar = [
+        'suscriptorSelect', 'numeroContratoInput', 'objetoContratoSelect',
+        'inputTotal', 'inputMeses', 'inputMensual'
+    ];
+    
+    camposALimpiar.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    
+    // Mostrar el modal
     modal.style.display = 'block';
+    console.log("Editando a:", empleado.nombre_completo);
 }
 
 // Cerrar modal
@@ -537,6 +702,44 @@ btnGenerarContrato.addEventListener('click', async function() {
         this.disabled = false;
     }
 });
+
+
+window.addEventListener('load', async () => {
+    let savedKey = API_CONFIG.getApiKey();
+    let savedClientId = API_CONFIG.getClientId();
+
+    // Si falta la API Key o el Client ID, los pedimos
+    if (!savedKey || !savedClientId) {
+        mostrarMensaje('Configuración requerida: Google Cloud Credentials', 'warning');
+        
+        if (!savedKey) {
+            savedKey = prompt("🔑 Pega tu API KEY de Google Cloud:");
+            if (savedKey) API_CONFIG.setApiKey(savedKey.trim());
+        }
+        
+        if (!savedClientId) {
+            savedClientId = prompt("🆔 Pega tu CLIENT ID de Google Cloud:");
+            if (savedClientId) API_CONFIG.setClientId(savedClientId.trim());
+        }
+        
+        if (savedKey && savedClientId) location.reload(); // Recarga para aplicar
+    } else {
+        API_KEY = savedKey;
+        CLIENT_ID = savedClientId;
+        esperarGapiYArrancar();
+    }
+});
+
+function mostrarLoader(mensaje) {
+    const loader = document.getElementById('loaderDrive');
+    const texto = document.getElementById('textoLoader');
+    texto.textContent = mensaje;
+    loader.style.display = 'flex';
+}
+
+function ocultarLoader() {
+    document.getElementById('loaderDrive').style.display = 'none';
+}
 
 async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContrato, objetoId) {
     console.log('✅ Generando contrato para:', nombre);
@@ -921,20 +1124,23 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
             page: {
                 size: { 
                     width: docx.convertInchesToTwip(8.5), 
-                    height: docx.convertInchesToTwip(14) 
+                    height: docx.convertInchesToTwip(14) // La hoja sigue siendo larga
                 },
                 margin: { 
-                    // Cámbialo a 2 o 2.5 para que el texto baje más.
-                    top: docx.convertInchesToTwip(2),
+                    top: docx.convertInchesToTwip(2), // Espacio para el encabezado
                     right: docx.convertInchesToTwip(1), 
-                    bottom: docx.convertInchesToTwip(1), 
-                    left: docx.convertInchesToTwip(1) 
+                    left: docx.convertInchesToTwip(1),
+                    
+                    // 🔹 AQUÍ ESTÁ EL TRUCO:
+                    // Ponemos 3 pulgadas de margen abajo. 
+                    // Así el texto "choca" con el límite a las 11 pulgadas.
+                    bottom: docx.convertInchesToTwip(3) 
                 }
             }
         },
         children: parrafos
     };
-    
+        
     // Si hay imagen, agregar el header con marca de agua
     if (imagenBlob) {
         try {
@@ -969,17 +1175,86 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
         }
     }
 
-    // 9. Crear el documento
+    // 9. Crear el documento binario
+    // ... dentro de generarContratoEmpleado ...
+
+    mostrarLoader("⚙️ Generando documento DOCX..."); // Inicio del proceso
+
     const doc = new docx.Document({
         sections: [sectionConfig]
     });
 
-    console.log('✅ Documento creado, exportando...');
-
-    // 10. Exportar con nombre personalizado
     const blob = await docx.Packer.toBlob(doc);
-    const nombreArchivo = `Contrato_${numeroContrato}_${nombre.replace(/\s+/g, '_')}.docx`;
-    saveAs(blob, nombreArchivo);
-    
-    console.log('✅ Documento exportado:', nombreArchivo);
-}
+
+    try {
+        const FOLDER_ID_PADRE = '1CfgEKvzu9CEBXokHiOuATEYXYLuEp8Ls';
+
+        if (gapi.client.getToken() === null) {
+            mostrarLoader("🔑 Solicitando permiso de Google Drive...");
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    ocultarLoader();
+                    throw resp;
+                }
+                await ejecutarSubidaDrive(nombre, blob, numeroContrato, FOLDER_ID_PADRE);
+            };
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+        } else {
+            await ejecutarSubidaDrive(nombre, blob, numeroContrato, FOLDER_ID_PADRE);
+        }
+
+    } catch (err) {
+        ocultarLoader();
+        mostrarMensaje("❌ Error de autenticación", "error");
+    }
+
+    // Función auxiliar mejorada con Loader
+    async function ejecutarSubidaDrive(nombre, blob, numeroContrato, folderPadreId) {
+        try {
+            mostrarLoader(`📁 Creando carpeta para ${nombre}...`);
+            
+            const folderResponse = await gapi.client.drive.files.create({
+                resource: {
+                    name: nombre.toUpperCase(),
+                    mimeType: 'application/vnd.google-apps.folder',
+                    parents: [folderPadreId]
+                },
+                fields: 'id'
+            });
+
+            const nuevaCarpetaId = folderResponse.result.id;
+            
+            mostrarLoader(`🚀 Subiendo contrato a Drive...`);
+            
+            const nombreArchivo = `Contrato_${numeroContrato}_${nombre.replace(/\s+/g, '_')}.docx`;
+            const metadata = { name: nombreArchivo, parents: [nuevaCarpetaId] };
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
+
+            const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: new Headers({ 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }),
+                body: form
+            });
+
+            if (res.ok) {
+                ocultarLoader();
+                mostrarMensaje(`✔️ ¡Todo listo! Carpeta y contrato creados.`, 'success');
+                if (typeof modal !== 'undefined') modal.style.display = 'none';
+            } else {
+                throw new Error("Error en la subida");
+            }
+
+            }  catch (err) {
+            ocultarLoader();
+            console.error("Detalle del error:", err);
+            
+            // Si el error es porque no hay permisos, lo explicamos mejor
+            if (err.error === 'idpiframe_initialization_failed') {
+                mostrarMensaje("❌ Error: Dominio no autorizado en Google Cloud", "error");
+            } else {
+                mostrarMensaje("❌ Error de autenticación: Revisa la consola (F12)", "error");
+            }
+    }
+    }}

@@ -6,32 +6,40 @@
     <link rel="stylesheet" href="component/css/index.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Generador de Contratos de Prestación de Servicios</h1>
-        
-        <!-- Campo de búsqueda -->
-        <div class="search-container">
-            <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Buscar por nombre (mínimo 3 letras)..."
-            >
-            <span id="searchInfo" class="search-info"></span>
+    <div id="panelPrincipal" style="display: none;">
+        <div class="container">
+            <h1>Generador de Contratos de Prestación de Servicios</h1>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Buscar por nombre (mínimo 3 letras)..."
+                >
+                <span id="searchInfo" class="search-info"></span>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre Completo</th>
+                        <th>Número de Cedula</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaEmpleados"></tbody>
+            </table>
         </div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Número de Cedula</th>
-                    <th>Nombre Completo</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tablaEmpleados"></tbody>
-        </table>
     </div>
 
+    <p id="estadoConexion"></p>
+
+
+    <div id="loaderDrive" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif;">
+        <div class="spinner"></div>
+        <p id="textoLoader" style="margin-top: 20px; color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Iniciando proceso...</p>
+    </div>
 
 
 <!--MODAL PARA EXTRAER DATO Y GENERAR -->
@@ -44,12 +52,13 @@
         <!-- Información del empleado seleccionado (NO EDITABLE) -->
         <div class="info-empleado">
             <div class="info-item">
-                <label>Número de Cédula:</label>
-                <span id="modalCedula"></span>
-            </div>
-            <div class="info-item">
                 <label>Nombre Completo:</label>
                 <span id="modalNombre"></span>
+            </div>
+
+            <div class="info-item">
+                <label>Número de Cédula:</label>
+                <span id="modalCedula"></span>
             </div>
         </div>
         
@@ -142,8 +151,11 @@
     </div>
 </div>
 
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
 <script src="../component/js/index.js"></script>   
 </body>
 </html>

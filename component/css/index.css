@@ -444,3 +444,51 @@ select.form-control {
 }
 
 
+
+
+
+/*ESTILO DE BOTON DE GESTIONAR EN MODAL*/
+/* Estilo moderno para el botón */
+.btn-gestionar {
+    background-color: #ffffff;
+    color: #4a90e2;
+    border: 1.5px solid #4a90e2;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.1);
+}
+
+.btn-gestionar:hover {
+    background-color: #4a90e2;
+    color: white;
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-gestionar:active {
+    transform: translateY(0);
+}
+
+/* Estilo para las filas de la tabla */
+#tablaEmpleados tr:hover {
+    background-color: #f8fbff;
+    transition: background-color 0.2s ease;
+}
+
+
+/*CARGA DE DATOS AL DRIVER*/
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
