@@ -658,44 +658,34 @@ async function obtenerImagenMarcaAgua(url) {
 
 // ==================== GENERAR CONTRATO ====================
 btnGenerarContrato.addEventListener('click', async function() {
-    // Validaciones
+    // Validaciones del formulario
     if (!suscriptorSelect.value) {
         alert('Por favor seleccione un supervisor');
-        suscriptorSelect.focus();
         return;
     }
-
     if (!numeroContratoInput.value.trim()) {
         alert('Por favor ingrese el número de contrato');
-        numeroContratoInput.focus();
         return;
     }
-
     if (!objetoContratoSelect.value) {
         alert('Por favor seleccione el objeto del contrato');
-        objetoContratoSelect.focus();
         return;
     }
-
     if (!inputTotal.value) {
         alert('Por favor ingrese el valor total del contrato');
-        inputTotal.focus();
         return;
     }
-
     if (!inputMeses.value) {
         alert('Por favor ingrese el total de meses');
-        inputMeses.focus();
         return;
     }
 
-    // Mostrar loading en el botón
-    const textoOriginal = this.textContent;
-    this.innerHTML = 'Generando... <span class="loading"></span>';
+    // Mostrar loading
+    const textoOriginal = this.innerHTML;
+    this.innerHTML = '⏳ Generando...';
     this.disabled = true;
 
     try {
-        // Generar documento con los datos
         await generarContratoEmpleado(
             empleadoActual.nombre_completo,
             empleadoActual.cedula,
@@ -703,18 +693,11 @@ btnGenerarContrato.addEventListener('click', async function() {
             numeroContratoInput.value.trim(),
             objetoContratoSelect.value
         );
-
-        // Cerrar modal después de generar
-        alert('Contrato generado exitosamente');
-        modal.style.display = 'none';
-        empleadoActual = null;
-
     } catch (error) {
-        console.error('Error al generar documento:', error);
-        alert('Error al generar el documento: ' + error.message);
+        console.error('❌ Error:', error);
+        mostrarMensaje('❌ Error: ' + error.message, 'error');
     } finally {
-        // Restaurar botón
-        this.textContent = textoOriginal;
+        this.innerHTML = textoOriginal;
         this.disabled = false;
     }
 });
@@ -779,6 +762,27 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
     console.log('✅ Generando contrato para:', nombre);
     console.log('📋 Parámetros:', { nombre, cedula, supervisorId, numeroContrato, objetoId });
 
+
+    console.log('✅ Generando contrato para:', nombre);
+
+    // ✅ Esperar hasta 5 segundos a que GIS esté listo
+    if (!gisInited) {
+        console.warn('⏳ Esperando GIS...');
+        await new Promise((resolve, reject) => {
+            let intentos = 0;
+            const check = setInterval(() => {
+                intentos++;
+                if (gisInited) {
+                    clearInterval(check);
+                    resolve();
+                }
+                if (intentos > 50) { // 5 segundos (50 x 100ms)
+                    clearInterval(check);
+                    reject(new Error('GIS no se inicializó a tiempo'));
+                }
+            }, 100);
+        });
+    }
 
     if (!gapiInited || !gisInited) {
         mostrarMensaje("❌ Error: APIs de Google no inicializadas", "error");
