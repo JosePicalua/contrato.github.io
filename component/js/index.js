@@ -247,6 +247,15 @@ function convertirNumeroALetras(num) {
     };
 
     let API_KEY = null;
+    let CLIENT_ID = null; // 👈 Agrega esta línea
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
+
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
+
+
+
 
     console.log('📋 Configuración cargada:', { SPREADSHEET_ID, SHEET_NAME, RANGE });
 
@@ -308,11 +317,32 @@ function convertirNumeroALetras(num) {
     async function initializeGapiClient() {
         await gapi.client.init({
             apiKey: API_KEY,
-            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+            discoveryDocs: [
+                'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest' // 👈 Agrega Drive API
+            ],
         });
-        console.log('✓ API de Google cargada');
+        console.log('✓ API de Google cargada (Sheets + Drive)');
+        gapiInited = true; // 👈 Marca como inicializado
         document.getElementById('panelPrincipal').style.display = 'block';
         await cargarDatosGoogleSheets();
+    }
+
+
+
+    function gisLoaded() {
+        if (!CLIENT_ID) {
+            console.warn('⚠️ CLIENT_ID no disponible aún');
+            return;
+        }
+        
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: '', // Se define en cada uso
+        });
+        gisInited = true;
+        console.log('✓ Google Identity Services inicializado');
     }
 
     // ==================== CARGAR DATOS ====================
@@ -722,13 +752,19 @@ window.addEventListener('load', async () => {
             if (savedClientId) API_CONFIG.setClientId(savedClientId.trim());
         }
         
-        if (savedKey && savedClientId) location.reload(); // Recarga para aplicar
+        if (savedKey && savedClientId) location.reload();
     } else {
         API_KEY = savedKey;
-        CLIENT_ID = savedClientId;
+        CLIENT_ID = savedClientId; // 👈 Asigna a la variable global
         esperarGapiYArrancar();
+        
+        // 👇 Inicializar GIS después de tener CLIENT_ID
+        if (typeof google !== 'undefined' && google.accounts) {
+            gisLoaded();
+        }
     }
 });
+
 
 function mostrarLoader(mensaje) {
     const loader = document.getElementById('loaderDrive');
@@ -741,9 +777,16 @@ function ocultarLoader() {
     document.getElementById('loaderDrive').style.display = 'none';
 }
 
-async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContrato, objetoId) {
+async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContrato, objetoId, sectionConfig) {
     console.log('✅ Generando contrato para:', nombre);
     console.log('📋 Parámetros:', { nombre, cedula, supervisorId, numeroContrato, objetoId });
+
+
+    if (!gapiInited || !gisInited) {
+        mostrarMensaje("❌ Error: APIs de Google no inicializadas", "error");
+        console.error("gapiInited:", gapiInited, "gisInited:", gisInited);
+        return;
+    }
     
     // Verificar que docx esté disponible
     if (!window.docx) {
@@ -1177,8 +1220,15 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
 
     // 9. Crear el documento binario
     // ... dentro de generarContratoEmpleado ...
-
     mostrarLoader("⚙️ Generando documento DOCX..."); // Inicio del proceso
+
+    // Verificar que esté todo inicializado
+    if (!gapiInited || !gisInited) {
+        mostrarMensaje("❌ Error: APIs de Google no inicializadas", "error");
+        console.error("gapiInited:", gapiInited, "gisInited:", gisInited);
+        ocultarLoader();
+        return;
+    }
 
     const doc = new docx.Document({
         sections: [sectionConfig]
@@ -1191,13 +1241,17 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
 
         if (gapi.client.getToken() === null) {
             mostrarLoader("🔑 Solicitando permiso de Google Drive...");
+            
             tokenClient.callback = async (resp) => {
                 if (resp.error !== undefined) {
                     ocultarLoader();
-                    throw resp;
+                    console.error("Error OAuth:", resp);
+                    mostrarMensaje("❌ Error de autorización: " + resp.error, "error");
+                    return;
                 }
                 await ejecutarSubidaDrive(nombre, blob, numeroContrato, FOLDER_ID_PADRE);
             };
+            
             tokenClient.requestAccessToken({ prompt: 'consent' });
         } else {
             await ejecutarSubidaDrive(nombre, blob, numeroContrato, FOLDER_ID_PADRE);
@@ -1205,7 +1259,8 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
 
     } catch (err) {
         ocultarLoader();
-        mostrarMensaje("❌ Error de autenticación", "error");
+        console.error("Error general:", err);
+        mostrarMensaje("❌ Error: " + (err.message || "Error desconocido"), "error");
     }
 
     // Función auxiliar mejorada con Loader
@@ -1213,6 +1268,7 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
         try {
             mostrarLoader(`📁 Creando carpeta para ${nombre}...`);
             
+            // 1. Crear carpeta
             const folderResponse = await gapi.client.drive.files.create({
                 resource: {
                     name: nombre.toUpperCase(),
@@ -1223,38 +1279,68 @@ async function generarContratoEmpleado(nombre, cedula, supervisorId, numeroContr
             });
 
             const nuevaCarpetaId = folderResponse.result.id;
+            console.log("✅ Carpeta creada con ID:", nuevaCarpetaId);
             
             mostrarLoader(`🚀 Subiendo contrato a Drive...`);
             
+            // 2. Subir archivo
             const nombreArchivo = `Contrato_${numeroContrato}_${nombre.replace(/\s+/g, '_')}.docx`;
-            const metadata = { name: nombreArchivo, parents: [nuevaCarpetaId] };
+            const metadata = {
+                name: nombreArchivo,
+                parents: [nuevaCarpetaId],
+                mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            };
+            
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
             form.append('file', blob);
 
+            // 👇 CORRECCIÓN: Usar gapi.client.getToken() en lugar de gapi.auth.getToken()
+            const token = gapi.client.getToken();
+            
+            if (!token || !token.access_token) {
+                throw new Error("No se pudo obtener el token de acceso");
+            }
+
             const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: 'POST',
-                headers: new Headers({ 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }),
+                headers: new Headers({ 'Authorization': 'Bearer ' + token.access_token }),
                 body: form
             });
 
+            const result = await res.json();
+            
             if (res.ok) {
                 ocultarLoader();
+                console.log("✅ Archivo subido con ID:", result.id);
                 mostrarMensaje(`✔️ ¡Todo listo! Carpeta y contrato creados.`, 'success');
-                if (typeof modal !== 'undefined') modal.style.display = 'none';
+                
+                if (typeof modal !== 'undefined' && modal) {
+                    modal.style.display = 'none';
+                }
             } else {
-                throw new Error("Error en la subida");
+                console.error("Error en la respuesta:", result);
+                throw new Error(result.error?.message || "Error en la subida a Drive");
             }
 
-            }  catch (err) {
+        } catch (err) {
             ocultarLoader();
-            console.error("Detalle del error:", err);
+            console.error("❌ Detalle del error completo:", err);
             
-            // Si el error es porque no hay permisos, lo explicamos mejor
-            if (err.error === 'idpiframe_initialization_failed') {
+            // Mensajes de error más específicos
+            if (err.result?.error?.code === 403) {
+                mostrarMensaje("❌ Sin permisos. Verifica que Drive API esté habilitada.", "error");
+            } else if (err.result?.error?.code === 404) {
+                mostrarMensaje("❌ Carpeta padre no encontrada. Verifica el ID.", "error");
+            } else if (err.error === 'idpiframe_initialization_failed') {
                 mostrarMensaje("❌ Error: Dominio no autorizado en Google Cloud", "error");
+            } else if (err.result?.error?.message) {
+                mostrarMensaje("❌ " + err.result.error.message, "error");
+            } else if (err.message) {
+                mostrarMensaje("❌ " + err.message, "error");
             } else {
-                mostrarMensaje("❌ Error de autenticación: Revisa la consola (F12)", "error");
+                mostrarMensaje("❌ Error desconocido. Revisa la consola (F12)", "error");
             }
+        }
     }
-    }}
+}
