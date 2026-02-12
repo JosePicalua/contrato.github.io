@@ -715,35 +715,27 @@ btnGenerarContrato.addEventListener('click', async function() {
 
 
 // ✅ DEJAR SOLO ESTE, CORREGIDO
-window.addEventListener('load', async () => {
-    let savedKey = API_CONFIG.getApiKey();
-    let savedClientId = API_CONFIG.getClientId();
+window.addEventListener('load', () => {
+        const savedKey = API_CONFIG.getApiKey();
 
-    if (!savedKey || !savedClientId) {
-        mostrarMensaje('Configuración requerida: Google Cloud Credentials', 'warning');
-        
         if (!savedKey) {
-            savedKey = prompt("🔑 Pega tu API KEY de Google Cloud (empieza con AIza...):");
-            if (savedKey) API_CONFIG.setApiKey(savedKey.trim());
+            mostrarMensaje('Configuración requerida: API Key de Google Sheets', 'warning');
+            setTimeout(() => {
+                const userApiKey = prompt(
+                    "🔑 Configuración Google Sheets\n\n" +
+                    "Pega tu API Key de Google Cloud Console:"
+                );
+                if (userApiKey && userApiKey.trim()) {
+                    API_CONFIG.setApiKey(userApiKey.trim());
+                    arrancarConApiKey(userApiKey.trim());
+                } else {
+                    mostrarMensaje('Sin API Key. Recarga la página para configurarla.', 'warning');
+                }
+            }, 300);
+        } else {
+            arrancarConApiKey(savedKey);
         }
-        
-        if (!savedClientId) {
-            savedClientId = prompt("🆔 Pega tu CLIENT ID (termina en .apps.googleusercontent.com):");
-            if (savedClientId) API_CONFIG.setClientId(savedClientId.trim());
-        }
-        
-        if (savedKey && savedClientId) location.reload();
-
-    } else {
-        API_KEY = savedKey;
-        CLIENT_ID = savedClientId;
-        arrancarConApiKey(savedKey);  // ← esta función ya llama a esperarGapiYArrancar()
-        
-        if (typeof google !== 'undefined' && google.accounts) {
-            gisLoaded();
-        }
-    }
-});
+    });
 
 
 function mostrarLoader(mensaje) {
