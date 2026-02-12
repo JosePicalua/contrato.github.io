@@ -728,40 +728,40 @@ window.addEventListener('load', async () => {
     if (!savedKey) {
         setTimeout(() => {
             const userApiKey = prompt("🔑 Pega tu API KEY (empieza con AIza...):");
-            if (userApiKey && userApiKey.trim()) {
-                API_CONFIG.setApiKey(userApiKey.trim());
-            } else {
-                mostrarMensaje('Sin API Key.', 'warning');
-                return;
-            }
+            if (userApiKey?.trim()) API_CONFIG.setApiKey(userApiKey.trim());
+            else { mostrarMensaje('Sin API Key.', 'warning'); return; }
+
             const userClientId = prompt("🆔 Pega tu CLIENT ID (.apps.googleusercontent.com):");
-            if (userClientId && userClientId.trim()) {
-                API_CONFIG.setClientId(userClientId.trim());
-            } else {
-                mostrarMensaje('Sin Client ID.', 'warning');
-                return;
-            }
+            if (userClientId?.trim()) API_CONFIG.setClientId(userClientId.trim());
+            else { mostrarMensaje('Sin Client ID.', 'warning'); return; }
+
             location.reload();
         }, 300);
 
     } else if (!savedClientId) {
         setTimeout(() => {
-            const userClientId = prompt("🆔 Pega tu CLIENT ID (.apps.googleusercontent.com):");
-            if (userClientId && userClientId.trim()) {
+            const userClientId = prompt("🆔 Pega tu CLIENT ID:");
+            if (userClientId?.trim()) {
                 API_CONFIG.setClientId(userClientId.trim());
                 location.reload();
             }
         }, 300);
 
     } else {
-        // ✅ Todo listo
         API_KEY = savedKey;
         CLIENT_ID = savedClientId;
         arrancarConApiKey(savedKey);
-        // ❌ NO llamar gisLoaded() aquí — el onload del script se encarga
+
+        // ✅ Esperar a que google.accounts esté disponible y llamar gisLoaded()
+        const esperarGIS = setInterval(() => {
+            if (typeof google !== 'undefined' && google.accounts) {
+                clearInterval(esperarGIS);
+                gisLoaded(); // ← se llama cuando GIS ya está cargado
+                console.log('✓ GIS listo');
+            }
+        }, 100);
     }
 });
-
 
 function mostrarLoader(mensaje) {
     const loader = document.getElementById('loaderDrive');
